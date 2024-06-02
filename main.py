@@ -54,7 +54,7 @@ def update_google_sheet(ticker_info):
     if os.path.exists('/tmp/token.json'):
         creds = Credentials.from_authorized_user_file('/tmp/token.json', SCOPES)
     if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
+        if creds and creds expired and creds.refresh_token:
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(credentials_json, SCOPES)
@@ -97,4 +97,4 @@ def main():
         return str(e)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=True)
