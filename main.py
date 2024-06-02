@@ -1,3 +1,4 @@
+from flask import Flask, request
 import requests
 from datetime import datetime, timedelta
 import os
@@ -6,21 +7,31 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
+import logging
+
+app = Flask(__name__)
+
+# ログの設定
+logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
 
 SPREADSHEET_ID = os.getenv('SPREADSHEET_ID')
+logging.info(f"Spreadsheet ID: {SPREADSHEET_ID}")
 
 BASE_URL = 'https://api.binance.com'
 
 def get_24hr_ticker(symbol):
+    logging.info("Fetching 24hr ticker data...")
     endpoint = '/api/v3/ticker/24hr'
     params = {'symbol': symbol}
     url = BASE_URL + endpoint
     response = requests.get(url, params=params)
     if response.status_code == 200:
+        logging.info("Ticker data fetched successfully.")
         return response.json()
     else:
+        logging.error(f"Failed to get 24hr ticker data. Response: {response.text}")
         raise Exception(f"Failed to get 24hr ticker data. Response: {response.text}")
 
 def convert_to_japan_time(unix_timestamp):
@@ -35,6 +46,7 @@ def split_date_time(jst_time_str):
     return date_str, time_str
 
 def update_google_sheet(ticker_info):
+    logging.info("Updating Google Sheet...")
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
     creds = None
     credentials_json = 'credentials.json'
@@ -69,16 +81,20 @@ def update_google_sheet(ticker_info):
         spreadsheetId=SPREADSHEET_ID, range=RANGE_NAME,
         valueInputOption='RAW', body=body).execute()
 
-    print(f'{result.get("updatedCells")} cells updated.')
+    logging.info(f'{result.get("updatedCells")} cells updated.')
 
-def main(request):
+@app.route('/', methods=['GET'])
+def main():
     symbol = 'BTCUSDC'
     try:
         ticker_info = get_24hr_ticker(symbol)
         ticker_info['closeTime'] = convert_to_japan_time(ticker_info['closeTime'])
-        print(ticker_info)
+        logging.info(f"Ticker info: {ticker_info}")
         update_google_sheet(ticker_info)
         return "Success"
     except Exception as e:
-        print(e)
+        logging.error(f"Error: {str(e)}")
         return str(e)
+
+if __name__ == '__main__':
+    app.run(debug=True)
