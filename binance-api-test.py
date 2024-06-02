@@ -6,9 +6,14 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
+from dotenv import load_dotenv
 
-# Binance APIエンドポイント
+load_dotenv()
+
+SPREADSHEET_ID = os.getenv('SPREADSHEET_ID')
+
 BASE_URL = 'https://api.binance.com'
+
 
 # 24時間の取引データを取得する関数
 def get_24hr_ticker(symbol):
@@ -59,8 +64,6 @@ def update_google_sheet(ticker_info):
 
     service = build('sheets', 'v4', credentials=creds)
 
-    # スプレッドシートIDを設定
-    SPREADSHEET_ID = '1Z5N7DtcidYOVZP58CDGgO8shk_tmGHJKLP9GpllCDOU'
 
     # シートの行数を取得して次の行を決定
     sheet = service.spreadsheets().values().get(spreadsheetId=SPREADSHEET_ID, range='Sheet1!A:A').execute()
