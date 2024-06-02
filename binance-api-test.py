@@ -45,13 +45,11 @@ def split_date_time(jst_time_str):
 def update_google_sheet(ticker_info):
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
     creds = None
-    credentials_json = 'credentials.json'  # 相対パスを使用
+    credentials_json = 'credentials.json' 
 
-    # トークンファイルが存在する場合、そこからクレデンシャルを読み込む
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-    
-    # クレデンシャルが存在しないか、無効な場合は新たに取得
+        
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
@@ -65,7 +63,6 @@ def update_google_sheet(ticker_info):
     service = build('sheets', 'v4', credentials=creds)
 
 
-    # シートの行数を取得して次の行を決定
     sheet = service.spreadsheets().values().get(spreadsheetId=SPREADSHEET_ID, range='Sheet1!A:A').execute()
     values = sheet.get('values', [])
     next_row = len(values) + 1
@@ -94,9 +91,9 @@ def main():
     try:
         ticker_info = get_24hr_ticker(symbol)
         ticker_info['closeTime'] = convert_to_japan_time(ticker_info['closeTime'])
-        print(ticker_info)  # 取得したデータをそのまま出力
+        print(ticker_info) #ログ
 
-        update_google_sheet(ticker_info)  # Google Sheetsにデータを入力
+        update_google_sheet(ticker_info)
     except Exception as e:
         print(e)
 
